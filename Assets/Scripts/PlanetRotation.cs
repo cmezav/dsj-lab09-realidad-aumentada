@@ -2,13 +2,14 @@ using UnityEngine;
 
 public class PlanetRotation : MonoBehaviour
 {
-    [SerializeField] private float degreesPerSecond = 15f;
+    public float degreesPerSecond = 30f;
 
     private void Update()
     {
         transform.Rotate(
-            Vector3.up,
+            0f,
             degreesPerSecond * Time.deltaTime,
+            0f,
             Space.Self
         );
     }
