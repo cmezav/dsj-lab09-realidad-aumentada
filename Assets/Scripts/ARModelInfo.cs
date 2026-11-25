@@ -5,6 +5,7 @@ public class ARModelInfo : MonoBehaviour
 {
     public Transform imageTarget;
     public TMP_Text informationText;
+    public TMP_Text titleText;
 
     private Transform previousModel;
     private int previousCount = -1;
@@ -118,7 +119,14 @@ public class ARModelInfo : MonoBehaviour
                 break;
         }
 
-        informationText.text =
-            $"<b>{title}</b>\n{description}";
+        if (titleText != null)
+        {
+            titleText.text = title.ToUpperInvariant();
+            informationText.text = description;
+        }
+        else
+        {
+            informationText.text = $"<b>{title}</b>\n{description}";
+        }
     }
 }
