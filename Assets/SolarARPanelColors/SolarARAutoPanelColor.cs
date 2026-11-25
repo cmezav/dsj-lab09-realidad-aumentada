@@ -1,99 +1,115 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace SolarARPanelColors
 {
-    // Paleta definida por modelo. No analiza la imagen de la webcam ni lee texturas.
-    // Se instala al iniciar Play o cargar una escena, sin editar la escena guardada.
     public sealed class SolarARAutoPanelColor : MonoBehaviour
     {
-        private ARModelInfo info;
-        private Image panel;
+        public ARModelInfo info;
+        public Image panel;
+        private Image[] surfaces;
+        private TMP_Text title;
+        private Outline outline;
         private Transform previous;
         private Color goal;
-        private float panelAlpha;
-        private bool initialized;
+        private Color accent;
+        private bool ready;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Register()
         {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneLoaded -= OnLoaded;
+            SceneManager.sceneLoaded += OnLoaded;
         }
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap() { Attach(); }
-
-        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode) { Attach(); }
-
+        private static void OnLoaded(Scene scene, LoadSceneMode mode) { Attach(); }
         private static void Attach()
         {
-            var panels = Object.FindObjectsByType<ARModelInfo>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var source in panels)
-            {
-                Image background = source.GetComponent<Image>();
-                if (background == null) background = source.GetComponentInParent<Image>();
-                if (background == null) continue;
+            foreach (var source in Object.FindObjectsByType<ARModelInfo>(FindObjectsInactive.Include, FindObjectsSortMode.None)) {
                 var effect = source.GetComponent<SolarARAutoPanelColor>();
                 if (effect == null) effect = source.gameObject.AddComponent<SolarARAutoPanelColor>();
-                effect.Configure(source, background);
+                effect.info = source;
+                if (effect.panel == null) effect.panel = source.GetComponent<Image>();
+                effect.Initialize();
             }
         }
-
-        private void Configure(ARModelInfo source, Image background)
+        private void Awake() { Initialize(); }
+        private void OnEnable() { Initialize(); }
+        private void Initialize()
         {
-            if (initialized) return;
-            info = source;
-            panel = background;
-            panelAlpha = background.color.a;
-            if (panelAlpha < 0.05f) panelAlpha = 0.82f;
-            goal = background.color;
-            goal.a = panelAlpha;
-            initialized = true;
+            if (info == null) info = GetComponent<ARModelInfo>();
+            if (panel == null) panel = GetComponent<Image>();
+            if (info == null || panel == null) return;
+            title = info.titleText;
+            outline = panel.GetComponent<Outline>();
+            var list = new List<Image>();
+            var canvas = info.GetComponentInParent<Canvas>();
+            if (canvas != null) {
+                foreach (var button in canvas.GetComponentsInChildren<Button>(true)) {
+                    var image = button.targetGraphic as Image;
+                    if (image != null && image != panel && !list.Contains(image)) list.Add(image);
+                }
+                foreach (var image in canvas.GetComponentsInChildren<Image>(true))
+                    if (image.name == "EstadoReconocimiento" && !list.Contains(image)) list.Add(image);
+            }
+            surfaces = list.ToArray();
+            previous = null;
+            goal = panel.color;
+            accent = Color.white;
+            ready = true;
         }
-
         private void LateUpdate()
         {
-            if (!initialized || info == null || info.imageTarget == null || panel == null) return;
+            if (!ready) Initialize();
+            if (!ready || info == null || info.imageTarget == null || panel == null) return;
             Transform selected = null;
-            for (int i = 0; i < info.imageTarget.childCount; i++)
-            {
-                Transform child = info.imageTarget.GetChild(i);
+            for (int i = 0; i < info.imageTarget.childCount; i++) {
+                var child = info.imageTarget.GetChild(i);
                 if (child.gameObject.activeSelf) { selected = child; break; }
             }
-            if (selected != null && selected != previous)
-            {
+            if (selected != null && selected != previous) {
                 previous = selected;
                 goal = Palette(selected.name);
-                goal.a = panelAlpha;
+                goal.a = 0.92f;
+                accent = Color.Lerp(goal, Color.white, 0.65f);
+                accent.a = 1f;
             }
-            // Transicion breve, independiente de la pausa de las animaciones.
-            float blend = 1f - Mathf.Exp(-10f * Time.unscaledDeltaTime);
-            if (((Vector4)panel.color - (Vector4)goal).sqrMagnitude > 0.000001f)
-                panel.color = Color.Lerp(panel.color, goal, blend);
+            float blend = 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime);
+            panel.color = Color.Lerp(panel.color, goal, blend);
+            if (title != null) title.color = Color.Lerp(title.color, accent, blend);
+            if (outline != null) {
+                Color border = accent; border.a = 0.8f;
+                outline.effectColor = Color.Lerp(outline.effectColor, border, blend);
+            }
+            if (surfaces != null) foreach (var image in surfaces) {
+                if (image == null) continue;
+                Color tint = Color.Lerp(goal, Color.black, image.name == "EstadoReconocimiento" ? 0.6f : 0.18f);
+                tint.a = 0.94f;
+                image.color = Color.Lerp(image.color, tint, blend);
+            }
         }
-
-        private static Color Palette(string modelName)
+        public static Color Palette(string modelName)
         {
             string hex;
-            switch (modelName)
-            {
-                case "Sun": hex = "#805019"; break;
-                case "Mercury": hex = "#494752"; break;
-                case "Venus": hex = "#74532E"; break;
-                case "Earth": hex = "#174F74"; break;
-                case "Mars": hex = "#843B2E"; break;
-                case "Jupiter": hex = "#75503C"; break;
-                case "Saturn": hex = "#76622F"; break;
-                case "Uranus": hex = "#206672"; break;
-                case "Neptune": hex = "#293D86"; break;
-                case "AR_Astronauta_Finn": hex = "#3B652D"; break;
-                case "AR_Astronauta_Rae": hex = "#82452F"; break;
-                case "AR_Mech_Barbara": hex = "#746018"; break;
-                case "AR_Alien_Volador": hex = "#5D397E"; break;
-                default: hex = "#293E5A"; break;
+            switch (modelName) {
+                case "Sun": hex = "#A96513"; break;
+                case "Mercury": hex = "#55535D"; break;
+                case "Venus": hex = "#98632E"; break;
+                case "Earth": hex = "#205F83"; break;
+                case "Mars": hex = "#9E3E32"; break;
+                case "Jupiter": hex = "#86513C"; break;
+                case "Saturn": hex = "#89702D"; break;
+                case "Uranus": hex = "#24787A"; break;
+                case "Neptune": hex = "#344C98"; break;
+                case "AR_Astronauta_Finn": hex = "#42732D"; break;
+                case "AR_Astronauta_Rae": hex = "#9D4E2F"; break;
+                case "AR_Mech_Barbara": hex = "#82701E"; break;
+                case "AR_Alien_Volador": hex = "#73418B"; break;
+                default: hex = "#48424D"; break;
             }
             ColorUtility.TryParseHtmlString(hex, out Color color);
             return color;
