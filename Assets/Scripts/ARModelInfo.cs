@@ -113,6 +113,31 @@ public class ARModelInfo : MonoBehaviour
                 description = "Criatura ficticia con animación de vuelo.";
                 break;
 
+            case "Space_Nave_Exploradora":
+                title = "Nave exploradora";
+                description = "Nave ficticia de reconocimiento: flota y gira sobre el marcador.";
+                break;
+            case "Space_Nave_Carga":
+                title = "Nave de carga";
+                description = "Transporte espacial ficticio: observa su forma desde distintos lados.";
+                break;
+            case "Space_Rover":
+                title = "Rover explorador";
+                description = "Vehiculo de exploracion ficticio: recorre una pequena ruta circular.";
+                break;
+            case "Space_Antena":
+                title = "Antena de comunicaciones";
+                description = "Equipo espacial estilizado con un movimiento de barrido.";
+                break;
+            case "Space_Meteorito":
+                title = "Meteoroide";
+                description = "Fragmento rocoso espacial: rota para que puedas examinar su superficie.";
+                break;
+            case "AR_Robot_Auxiliar":
+                title = "Robot auxiliar";
+                description = "Robot ficticio de Quaternius: reproduce su animacion original de saludo.";
+                break;
+
             default:
                 title = selected.name;
                 description = "Modelo presentado en realidad aumentada.";

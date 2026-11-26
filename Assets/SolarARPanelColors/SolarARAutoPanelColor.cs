@@ -109,6 +109,13 @@ namespace SolarARPanelColors
                 case "AR_Astronauta_Rae": hex = "#9D4E2F"; break;
                 case "AR_Mech_Barbara": hex = "#82701E"; break;
                 case "AR_Alien_Volador": hex = "#73418B"; break;
+                case "Space_Nave_Exploradora": hex = "#96602C"; break;
+                case "Space_Nave_Carga": hex = "#875037"; break;
+                case "Space_Rover": hex = "#8B702D"; break;
+                case "Space_Antena": hex = "#426873"; break;
+                case "Space_Meteorito": hex = "#985344"; break;
+                case "AR_Robot_Auxiliar": hex = "#28776C"; break;
+
                 default: hex = "#48424D"; break;
             }
             ColorUtility.TryParseHtmlString(hex, out Color color);
