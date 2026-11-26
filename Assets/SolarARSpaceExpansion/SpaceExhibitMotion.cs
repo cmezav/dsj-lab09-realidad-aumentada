@@ -21,8 +21,11 @@ namespace SolarARSpaceExpansion
                     transform.localRotation = Quaternion.Euler(0f, t * 8f, 0f);
                     break;
                 case 2:
-                    transform.localPosition = new Vector3(Mathf.Sin(t * 0.6f) * 0.012f, 0f, (Mathf.Cos(t * 0.6f) - 1f) * 0.012f);
-                    transform.localRotation = Quaternion.Euler(0f, t * 0.6f * Mathf.Rad2Deg + 90f, 0f);
+                    // Recorrido eliptico visible (13 x 8 cm a escala normal), no giro en el sitio.
+                    float angle = t * 0.65f;
+                    transform.localPosition = new Vector3(Mathf.Sin(angle) * 0.065f, 0f, Mathf.Cos(angle) * 0.04f);
+                    Vector3 tangent = new Vector3(Mathf.Cos(angle) * 0.065f, 0f, -Mathf.Sin(angle) * 0.04f);
+                    transform.localRotation = Quaternion.LookRotation(tangent, Vector3.up);
                     break;
                 case 3:
                     transform.localPosition = Vector3.zero;
